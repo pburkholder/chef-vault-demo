@@ -10,8 +10,9 @@ provisioner:
   name: dokken
 
 verifier:
-  name: inspec
-  sudo: true
+  name: busser
+  root_path: '/opt/verifier'
+  sudo: false
 
 platforms:
 - name: ubuntu-14.04
