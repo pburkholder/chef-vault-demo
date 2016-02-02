@@ -41,3 +41,29 @@ See video to see the details
 1. Move content to `templates/default/s3cfg.erb`
 2. Use variables `aws_access_key` and `aws_secret_key`
 3. Set variables and use them in them template
+
+## 2: Use a data bag
+
+```
+git checkout v2-initial-databag
+git diff origin/v1 -- recipes
+git diff origin/v1 -- data_bags
+```
+
+In the recipe we've replaced the variable assignments with a fetch from a data bag:
+
+```
+aws = data_bag_item('cleartext', 'aws')
+aws_secret_key = aws['aws_secret_key']
+aws_access_key = aws['aws_access_key']
+```
+
+and we've now created a databag, as JSON, at data_bags/cleartext/aws.json, with contents:
+
+```
+{
+  "id": "aws",
+  "aws_access_key": "AKIAJWLDGDWB6HVRMRAQ",
+  "aws_secret_key": "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"
+}
+```
