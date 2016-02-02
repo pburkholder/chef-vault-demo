@@ -35,3 +35,9 @@ See video to see the details
 - update the inspec tests
 - update the recipe
 - test-kitchen
+
+## 1: Use a template and variables
+
+1. Move content to `templates/default/s3cfg.erb`
+2. Use variables `aws_access_key` and `aws_secret_key`
+3. Set variables and use them in them template
