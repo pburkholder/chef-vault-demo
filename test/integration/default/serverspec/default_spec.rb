@@ -7,7 +7,7 @@ end
 
 # home/ubuntu/.s3cfg contains AKIA
 describe file('/home/ubuntu/.s3cfg') do
-#  its('content') { should match /access_key = AKIA/ }
+  its('content') { should match /access_key = AKIA/ }
 end
 
 # command s3cmd fetches something
