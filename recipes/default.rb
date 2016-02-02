@@ -12,8 +12,8 @@ file '/home/ubuntu/.s3cfg' do
   content (
 '
 [default]
-access_key = AKIAIEL734BZ7Y2IHAFQ
-secret_key = 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
+access_key = AKIAJWLDGDWB6HVRMRAQ
+secret_key = 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
 '
   )
 end
