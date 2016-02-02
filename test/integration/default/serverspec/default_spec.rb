@@ -1,9 +1,13 @@
 require 'inspec'
 
-# s3cmd package installed
+describe file('/etc/passwd') do
+    it { should be_file }
+end
 
-# /home/ubuntu/.s3cfg contains AKIA
+describe file('/home/ubuntu/foo') do
+    it { should be_file }
+end
 
-# command s3cmd fetches something
-
-# minikitten.png is in place?
+describe file('/home/ubuntu/foo.bar') do
+    it { should be_file }
+end

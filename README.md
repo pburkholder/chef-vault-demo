@@ -32,6 +32,8 @@ Show Policy
 See video to see the details
 
 - git clone this repo
+- git checkout -b v0
 - update the inspec tests
 - update the recipe
 - test-kitchen
+- git commit 
