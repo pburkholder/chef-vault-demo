@@ -8,8 +8,9 @@ package 's3cmd'
 
 directory '/home/ubuntu'
 
-aws_secret_key = 'MBwyEDSIGFizzZgs+L9k5R5OPUsjkNjdSFq4tsTo'
-aws_access_key = 'AKIAJWLDGDWB6HVRMRAQ'
+aws = data_bag_item('cleartext', 'aws')
+aws_secret_key = aws['aws_secret_key']
+aws_access_key = aws['aws_access_key']
 
 template '/home/ubuntu/.s3cfg' do
   source 's3cfg.erb'
