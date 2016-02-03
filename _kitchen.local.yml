@@ -19,3 +19,5 @@ platforms:
   driver:
     image: ubuntu-upstart:14.04
     pid_one_command: /sbin/init
+    intermediate_instructions:
+      - COPY encrypted_data_bag_secret /root/encrypted_data_bag_secret
