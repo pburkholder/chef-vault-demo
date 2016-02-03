@@ -67,3 +67,27 @@ and we've now created a databag, as JSON, at data_bags/cleartext/aws.json, with 
   "aws_secret_key": "MBwyEDSIGFizzZgs+L9k5R5OPUsjkNjdSFq4tsTo"
 }
 ```
+
+
+## 3: Encrypted data bags
+
+```
+git checkout v3-encrypted-databag
+```
+
+Make the secret from random data
+
+```
+mkdir -p files/default/
+openssl rand -base64 512 |
+  tr -d '\r\n' > files/default/encrypted_data_bag_secret
+```
+
+For testing, we'll use the `-z`option to `knife` for local-mode operations (a.k.a 'chef-zero'). To create an encrypted data bag from our cleartext `aws.json`:
+
+```
+knife data bag -z create encrypted
+knife data bag -z from file encrypted data_bags/cleartext/aws.json --secret-file files/default/encrypted_data_bag_secret
+```
+
+and we'll update our recipe....
