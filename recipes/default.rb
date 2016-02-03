@@ -4,6 +4,8 @@
 #
 # Copyright (c) 2016 The Authors, All Rights Reserved.
 
+log 'typically EDB secret would be distributed out-of-band from Chef'
+
 directory('/etc/chef').run_action(:create)
 
 cookbook_file '/etc/chef/encrypted_data_bag_secret' do
@@ -12,6 +14,8 @@ cookbook_file '/etc/chef/encrypted_data_bag_secret' do
   group 'root'
   mode 00006
 end.run_action(:create)
+
+log 'Everything else here would be typical EDB use'
 
 aws = data_bag_item(
   'encrypted', 'aws', IO.read('/etc/chef/encrypted_data_bag_secret')
