@@ -97,7 +97,7 @@ and we'll update our recipe....
 Using vault with test-kitchen and chef-zero/local-mode is non-obvious, so we'll go to using real user and nodes.  From the branch on the code is set up as a chef-repo instead of just a single cookbook.
 
 On a chef-server, we'll need to:
-- creat an `organization`, "nightwatch"
+- create an `organization`, "nightwatch"
 - associate my user, `pdb`, with that organization
 - create two admin users, 'jsnow' and 'starly' for that organization
   - and be sure to save all the relevant keys
@@ -120,29 +120,47 @@ chef-server-ctl org-user-add nightwatch starly
 Let's make sure to fetch all these `.pem` files:
 
 ```
-$mychefserver="ubuntu@cheffian.chefserver.com"
 mkdir .chef && cd .chef
+mychefserver="ubuntu@chefserver.cheffian.com"
 scp $mychefserver:nightwatch.pem .
 scp $mychefserver:jsnow.pem .
 scp $mychefserver:starly.pem .
 ```
 
-And I need to setup my `.client.rb` -- see `.chef/client.rb` and since I won't want to type `--config /some/path/to/client.rb` I'll use this function for `vnife`:
+And I need to setup my `.client.rb` -- see `.chef/client.rb` and since I won't want to type `--config /some/path/to/client.rb` I'll use this variable `cc` (for client config)
 
 ```
-function vnife() {
-  knife $* --config /Users/pburkholder/Projects/pburkholder/chef-vault-demo/.chef/client.rb;
-}
+cc="--config $HOME/Projects/pburkholder/chef-vault-demo/.chef/client.rb"
+```
+
+Test that we're call connected:
+
+```
+knife user list $cc
 ```
 
 Let's create a vault to store our credentials:
 
 ```
-vnife vault create \ # create a vault ...
-  credentials \      # named 'credentials' ...
-  aws \              # with item 'aws'
-  -A starly,jsnow \  # Set admins to Sam and Jon
-  -M client \        # 'client' mode (not chef-zero mode)
-  -S ‘name:whitewalker_node_*’ \
-  -J data_bags/cleartest/aws.json
+knife vault create \
+  credentials \
+  aws \
+  -A starly,jsnow \
+  -M client \
+  -S 'name:whitewalker_node_*' \
+  -J data_bags/cleartext/aws.json $cc
+```
+
+Returns:
+
+```
+WARNING: No clients were returned from search, you may not have got what you expected!!
+```
+
+Unpack what each of the arguments are...
+
+What have we done here? Let's look:
+
+```
+knife vault show $cc
 ```
