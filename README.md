@@ -111,32 +111,34 @@ chef-server-ctl org-create nightwatch Nightwatch -f nightwatch.pem -a $myuser
 chef-server-ctl user-create jsnow Jon Snow \
   jsnow@castleblack.we winteriscoming -f jsnow.pem
 chef-server-ctl user-create starly Sam Tarly \
-  starly@castleblack.we firstinbattle -f stary.pem
+  starly@castleblack.we firstinbattle -f starly.pem
+chef-server-ctl user-create jslynt Janos Slynt \
+  jslynt@castleblack.we notmentioned -f jslynt.pem
 
 chef-server-ctl org-user-add nightwatch jsnow --admin
 chef-server-ctl org-user-add nightwatch starly
+chef-server-ctl org-user-add nightwatch jslynt
 ```
 
 Let's make sure to fetch all these `.pem` files:
 
 ```
-mkdir .chef && cd .chef
 mychefserver="ubuntu@chefserver.cheffian.com"
-scp $mychefserver:nightwatch.pem .
-scp $mychefserver:jsnow.pem .
-scp $mychefserver:starly.pem .
+for pem in nightwatch jsnow starly jslynt; do
+  scp $mychefserver:$pem.pem $HOME/.chef/cheffian/
+done
 ```
 
-And I need to setup my `.client.rb` -- see `.chef/client.rb` and since I won't want to type `--config /some/path/to/client.rb` I'll use this variable `cc` (for client config)
+To use this org I have my `.chef/knife.rb` set up to use the CHEF_SERVER env var, like this:
 
 ```
-cc="--config $HOME/Projects/pburkholder/chef-vault-demo/.chef/client.rb"
+export CHEF_SERVER=nightwatch
 ```
 
-Test that we're call connected:
+Now I can test that we're all connected:
 
 ```
-knife user list $cc
+knife user list
 ```
 
 Let's create a vault to store our credentials:
@@ -148,7 +150,7 @@ knife vault create \
   -A starly,jsnow \
   -M client \
   -S 'name:whitewalker_node_*' \
-  -J data_bags/cleartext/aws.json $cc
+  -J data_bags/cleartext/aws.json
 ```
 
 Returns:
@@ -162,5 +164,16 @@ Unpack what each of the arguments are...
 What have we done here? Let's look:
 
 ```
-knife vault show $cc
+knife vault show credentials aws -M client
+# compare to non-admin user
+CHEF_USER=jslynt knife vault show credentials aws -M client
 ```
+
+Under the covers, chef-vault is just some client-side code on top of data bags. First, let's look at the data bag item `credentials/aws`, then `credentials/aws_keys`
+
+```
+knife data bag show credentials aws
+knife data bag show credentials aws_keys
+```
+
+## 4.1: Let's use vault in our code
