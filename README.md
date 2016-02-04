@@ -91,3 +91,58 @@ knife data bag -z from file encrypted data_bags/cleartext/aws.json --secret-file
 ```
 
 and we'll update our recipe....
+
+## 4.0: Setting up to use vault
+
+Using vault with test-kitchen and chef-zero/local-mode is non-obvious, so we'll go to using real user and nodes.  From the branch on the code is set up as a chef-repo instead of just a single cookbook.
+
+On a chef-server, we'll need to:
+- creat an `organization`, "nightwatch"
+- associate my user, `pdb`, with that organization
+- create two admin users, 'jsnow' and 'starly' for that organization
+  - and be sure to save all the relevant keys
+
+To wit:
+
+```
+myuser=pdb
+chef-server-ctl org-create nightwatch Nightwatch -f nightwatch.pem -a $myuser
+
+chef-server-ctl user-create jsnow Jon Snow \
+  jsnow@castleblack.we winteriscoming -f jsnow.pem
+chef-server-ctl user-create starly Sam Tarly \
+  starly@castleblack.we firstinbattle -f stary.pem
+
+chef-server-ctl org-user-add nightwatch jsnow --admin
+chef-server-ctl org-user-add nightwatch starly
+```
+
+Let's make sure to fetch all these `.pem` files:
+
+```
+$mychefserver="ubuntu@cheffian.chefserver.com"
+mkdir .chef && cd .chef
+scp $mychefserver:nightwatch.pem .
+scp $mychefserver:jsnow.pem .
+scp $mychefserver:starly.pem .
+```
+
+And I need to setup my `.client.rb` -- see `.chef/client.rb` and since I won't want to type `--config /some/path/to/client.rb` I'll use this function for `vnife`:
+
+```
+function vnife() {
+  knife $* --config /Users/pburkholder/Projects/pburkholder/chef-vault-demo/.chef/client.rb;
+}
+```
+
+Let's create a vault to store our credentials:
+
+```
+vnife vault create \ # create a vault ...
+  credentials \      # named 'credentials' ...
+  aws \              # with item 'aws'
+  -A starly,jsnow \  # Set admins to Sam and Jon
+  -M client \        # 'client' mode (not chef-zero mode)
+  -S ‘name:whitewalker_node_*’ \
+  -J data_bags/cleartest/aws.json
+```
