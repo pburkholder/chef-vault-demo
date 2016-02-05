@@ -92,6 +92,26 @@ knife data bag -z from file encrypted data_bags/cleartext/aws.json --secret-file
 
 and we'll update our recipe....
 
+## 3.99 Refresh everything for vault demo
+
+```
+
+aws autoscaling set-desired-capacity \
+  --auto-scaling-group-name vault-provision \
+  --desired-capacity 0
+
+chef-server-ctl org-delete nightwatch
+for user in starly jsnow jslynt; do
+  chef-server-ctl user-delete $user
+done
+
+
+aws autoscaling set-desired-capacity \
+  --auto-scaling-group-name vault-provision \
+  --desired-capacity 3
+
+```
+
 ## 4.0: Setting up to use vault
 
 Using vault with test-kitchen and chef-zero/local-mode is non-obvious, so we'll go to using real user and nodes.  From the branch on the code is set up as a chef-repo instead of just a single cookbook.
@@ -99,7 +119,7 @@ Using vault with test-kitchen and chef-zero/local-mode is non-obvious, so we'll 
 On a chef-server, we'll need to:
 - create an `organization`, "nightwatch"
 - associate my user, `pdb`, with that organization
-- create two admin users, 'jsnow' and 'starly' for that organization
+- create three users, 'jsnow' and 'starly' for that organization
   - and be sure to save all the relevant keys
 
 To wit:

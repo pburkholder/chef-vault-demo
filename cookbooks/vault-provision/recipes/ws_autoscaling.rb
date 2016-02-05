@@ -29,7 +29,7 @@ with_driver 'aws::us-east-1' do
 
   aws_auto_scaling_group group_name do
     desired_capacity 3
-    min_size 1
+    min_size 0
     max_size 6
     launch_configuration group_name
     availability_zones ['us-east-1c']
