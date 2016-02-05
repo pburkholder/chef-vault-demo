@@ -212,10 +212,19 @@ chef_gem 'chef-vault' do
   version '2.6.1'
 end
 
+require 'chef-vault'
+
 # fetch the aws item from the credentials vault
 aws = chef_vault_item('credentials', 'aws')
 aws_secret_key = aws['aws_secret_key']
 aws_access_key = aws['aws_access_key']
+```
+
+*** Upload to server ***
+
+```
+berks install
+berks upload
 ```
 
 ### 4.1.1: An aside on AWS provisioning
@@ -295,7 +304,7 @@ alias inspec_exec='inspec exec cookbooks/vault-demo/test/integration/default/ser
 inspec_exec -t ssh://ubuntu@${VAULT_IPS[0]}
 ```
 
-## 4.4 Bootstrap with --vault-bootstrap
+## 4.3 Bootstrap with --vault-bootstrap
 
 For our second node, VAULT_IPS[1], we'll combine some steps into our initial bootstrap:
 - set to real run_list
@@ -332,3 +341,15 @@ inspec_exec -t ssh://ubuntu@${VAULT_IPS[$NODE]}
 - data-bag write-lock issues
 - large client pools
 - vault-admins not the same set of folks as the chef-admins
+
+## Notes on presenting
+
+Order:
+1. Present: Using DBs and EDBs
+  1. Part 2 with databags
+  2. Part 3 with EDBs
+1. skip: Setting up server
+1. Screencast: 4.0.1CreateVault
+2. Present: 4.1 Using in Recipe
+1. Present: 4.2 First test starting with no run_list node
+1. Present: 4.3 Using knife bootstrap
