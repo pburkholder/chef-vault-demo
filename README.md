@@ -113,8 +113,10 @@ aws autoscaling set-desired-capacity \
 ```
 
 ## 4.0: Setting up to use vault
-
+**
 Using vault with test-kitchen and chef-zero/local-mode is non-obvious, so we'll go to using real user and nodes.  From the branch on the code is set up as a chef-repo instead of just a single cookbook.
+
+### 4.0.0: Set up the chef-server users and orgs
 
 On a chef-server, we'll need to:
 - create an `organization`, "nightwatch"
@@ -160,6 +162,9 @@ Now I can test that we're all connected:
 ```
 knife user list
 ```
+
+### 4.0.1: Create the vault
+
 
 Let's create a vault to store our credentials:
 
