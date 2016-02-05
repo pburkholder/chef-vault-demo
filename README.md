@@ -307,7 +307,7 @@ knife bootstrap ${VAULT_IPS[$NODE]} \
   -N whitewalker_node_${NODE} \
   --hint ec2 \
   -r 'recipe[vault-demo]'    \
-  --vault-bootstrap 'credentials:aws' \
+  --bootstrap-vault-item 'credentials:aws' \
   --sudo     -x ubuntu
 ```
 
