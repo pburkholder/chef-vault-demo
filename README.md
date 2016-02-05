@@ -176,4 +176,39 @@ knife data bag show credentials aws
 knife data bag show credentials aws_keys
 ```
 
-## 4.1: Let's use vault in our code
+## 4.1: Let's use vault in our code and set up our test instances
+
+To the cookbook's `metadata.rb` add `depends 'chef-vault'` and to default recipe, we'll now have:
+
+```
+# install gem and stuff
+include_recipe ‘chef-vault’
+
+# fetch the aws item from the credentials vault
+aws = chef_vault_item(:credentials, 'aws')
+aws_secret_key = aws['aws_secret_key']
+aws_access_key = aws['aws_access_key']
+```
+
+
+To use this we need some nodes. The cookbook `vault-provision` creates an AWS autoscale group with TKTK nodes, and pre-installs `chef-client` on them. I use the cookbook to stand up the nodes like this:
+
+```
+export AWS_DEFAULT_PROFILE=default
+chef-client -z cookbooks/vault-provision/recipes/ws_autoscaling.rb
+```
+
+```
+function vault-demo-ip() {
+  aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names vault-provision | jq -r '.AutoScalingGroups[].Instances[].InstanceId' | sort | while read instance_id; do
+    aws ec2 describe-instances --instance-ids $instance_id | jq -r '.Reservations[].Instances[].PublicIpAddress' | sort
+  done
+}
+```
+
+## 4.2 First test
+
+- Bootstrap a node with no run_list
+- Update the vault
+- Converge the node to the run_list
+- Verify

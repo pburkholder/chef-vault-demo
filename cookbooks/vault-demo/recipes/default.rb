@@ -4,22 +4,13 @@
 #
 # Copyright (c) 2016 The Authors, All Rights Reserved.
 
-log 'typically EDB secret would be distributed out-of-band from Chef'
+# install gem and stuff
 
-directory('/etc/chef').run_action(:create)
+include_recipe ‘chef-vault’
 
-cookbook_file '/etc/chef/encrypted_data_bag_secret' do
-  source 'encrypted_data_bag_secret'
-  owner 'root'
-  group 'root'
-  mode 00006
-end.run_action(:create)
+# fetch the aws item from the credentials vault
+aws = chef_vault_item(:credentials, 'aws')
 
-log 'Everything else here would be typical EDB use'
-
-aws = data_bag_item(
-  'encrypted', 'aws', IO.read('/etc/chef/encrypted_data_bag_secret')
-)
 aws_secret_key = aws['aws_secret_key']
 aws_access_key = aws['aws_access_key']
 

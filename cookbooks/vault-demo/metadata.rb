@@ -5,3 +5,5 @@ license 'all_rights'
 description 'Installs/Configures chef-vault-demo-cookbook'
 long_description 'Installs/Configures chef-vault-demo-cookbook'
 version '0.1.0'
+
+depends 'chef-vault'
