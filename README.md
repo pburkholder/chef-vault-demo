@@ -190,6 +190,7 @@ aws_secret_key = aws['aws_secret_key']
 aws_access_key = aws['aws_access_key']
 ```
 
+### 4.1.1: An aside on AWS provisioning
 
 To use this we need some nodes. The cookbook `vault-provision` creates an AWS autoscale group with TKTK nodes, and pre-installs `chef-client` on them. I use the cookbook to stand up the nodes like this:
 
@@ -209,7 +210,11 @@ function vault-demo-ips() {
   aws ec2 describe-instances --instance-ids $instance_ids | jq -r '.Reservations[].Instances[].PublicIpAddress'
 }
 
+alias terminate-vault-id='aws autoscaling terminate-instance-in-auto-scaling-group --no-should-decrement-desired-capacity --instance-id '  
+}
+
 NODE_ARRAY=( $(vault-demo-ips) )
+ARRAY_IDS=( $(vault-demo-ids) )
 ```
 
 ## 4.2 First test
