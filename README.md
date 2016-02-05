@@ -241,19 +241,25 @@ function vault-demo-ips() {
 alias terminate-vault-id='aws autoscaling terminate-instance-in-auto-scaling-group --no-should-decrement-desired-capacity --instance-id '  
 }
 
-NODE_ARRAY=( $(vault-demo-ips) )
-ARRAY_IDS=( $(vault-demo-ids) )
+VAULT_IPS=( $(vault-demo-ips) )
+VAULT_IDS=( $(vault-demo-ids) )
 ```
 
 ## 4.2 First test
 
+Here are the steps we'll run through:
+
 - Bootstrap a node with no run_list
+- Try a run_list on that node before we've updated vault
 - Update the vault
 - Converge the node to the run_list
 - Verify
 
+
+1. Bootstrap to no run_list:
+
 ```
-knife bootstrap ${NODE_ARRAY[0]} \
+knife bootstrap ${VAULT_IPS[0]} \
   -N whitewalker_node_0 \
   --hint ec2 \
   -r ''    \
@@ -262,14 +268,14 @@ knife bootstrap ${NODE_ARRAY[0]} \
 knife node list
 ```
 
-Let's set the run_list and run chef-client
+2. Set the run_list and run chef-client
 
 ```
 knife node run_list set whitewalker_node_0 'recipe[vault-demo]'
 knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
 ```
 
-Review the vault and Update
+3. Review the vault then update it
 
 ```
 knife data bag show credentials aws_keys
@@ -277,13 +283,14 @@ knife vault refresh credentials aws -M client
 knife data bag show credentials aws_keys
 ```
 
-Converge node to a run_list
+4. Attempt again to converge node to a run_list
 
 ```
 knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
 ```
 
-Verify
+5. Verify
+
 ```
 alias inspec_exec='inspec exec cookbooks/vault-demo/test/integration/default/serverspec/default_spec.rb --key-files  ~/.ssh/pburkholder-one'
 inspec_exec -t ssh://ubuntu@${ARRAY[0]}
@@ -291,7 +298,11 @@ inspec_exec -t ssh://ubuntu@${ARRAY[0]}
 
 ## 4.2 Bootstrap with --vault-bootstrap
 
-## 4.3 How to update a vault item
+## 4.3 How to work with vault over time
+
+- vault and version control
+- updating vault items
+- updating vault admins/clients
 
 ## 4.4 Some weaknesses
 
