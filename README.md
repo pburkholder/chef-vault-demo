@@ -262,6 +262,13 @@ knife bootstrap ${NODE_ARRAY[0]} \
 knife node list
 ```
 
+Let's set the run_list and run chef-client
+
+```
+knife node run_list set whitewalker_node_0 'recipe[vault-demo]'
+knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
+```
+
 Review the vault and Update
 
 ```
