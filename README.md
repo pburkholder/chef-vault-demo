@@ -256,7 +256,7 @@ Here are the steps we'll run through:
 - Verify
 
 
-1. Bootstrap to no run_list:
+#### 1. Bootstrap to no run_list:
 
 ```
 knife bootstrap ${VAULT_IPS[0]} \
@@ -268,45 +268,67 @@ knife bootstrap ${VAULT_IPS[0]} \
 knife node list
 ```
 
-2. Set the run_list and run chef-client
+#### 2. Set the run_list and run chef-client:
 
 ```
 knife node run_list set whitewalker_node_0 'recipe[vault-demo]'
 knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
 ```
 
-3. Review the vault then update it
+#### 3. Review the vault then update it
 
 ```
 knife data bag show credentials aws_keys
 knife vault refresh credentials aws -M client
-knife data bag show credentials aws_keys
 ```
 
-4. Attempt again to converge node to a run_list
+#### 4. Attempt again to converge node to a run_list
 
 ```
 knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
 ```
 
-5. Verify
+#### 5. Verify
 
 ```
 alias inspec_exec='inspec exec cookbooks/vault-demo/test/integration/default/serverspec/default_spec.rb --key-files  ~/.ssh/pburkholder-one'
-inspec_exec -t ssh://ubuntu@${ARRAY[0]}
+inspec_exec -t ssh://ubuntu@${VAULT_IPS[0]}
 ```
 
-## 4.2 Bootstrap with --vault-bootstrap
+## 4.4 Bootstrap with --vault-bootstrap
 
-## 4.3 How to work with vault over time
+For our second node, VAULT_IPS[1], we'll combine some steps into our initial bootstrap:
+- set to real run_list
+- use the `--vault-bootstrap` option
+
+```
+NODE=1
+knife bootstrap ${VAULT_IPS[$NODE]} \
+  -N whitewalker_node_${NODE} \
+  --hint ec2 \
+  -r 'recipe[vault-demo]'    \
+  --vault-bootstrap 'credentials:aws'
+  --sudo     -x ubuntu
+```
+
+Now view the vault and verify the result.:
+
+```
+knife data bag show credentials aws_keys
+inspec_exec -t ssh://ubuntu@${VAULT_IPS[$NODE]}
+```
+
+
+## 5 How to work with vault over time
 
 - vault and version control
 - updating vault items
 - updating vault admins/clients
 
-## 4.4 Some weaknesses
+## 5.1 Some weaknesses
 
 - autoscaling
 - node impersonation attack
 - data-bag write-lock issues
+- large client pools
 - vault-admins not the same set of folks as the chef-admins
