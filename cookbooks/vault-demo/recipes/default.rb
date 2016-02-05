@@ -10,6 +10,8 @@ chef_gem 'chef-vault' do
   version '2.6.1'
 end
 
+require 'chef-vault'
+
 # fetch the aws item from the credentials vault
 aws = chef_vault_item('credentials', 'aws')
 aws_secret_key = aws['aws_secret_key']
