@@ -5,7 +5,7 @@
 # Copyright (c) 2016 The Authors, All Rights Reserved.
 
 # install gem and stuff
-chef_gem 'chef-vault' do # ~FC009
+chef_gem 'chef-vault' do
   compile_time true
   version '2.6.1'
 end

@@ -207,7 +207,10 @@ To the cookbook's `metadata.rb` add `depends 'chef-vault'` and to default recipe
 
 ```
 # install gem and stuff
-include_recipe ‘chef-vault’
+chef_gem 'chef-vault' do
+  compile_time true
+  version '2.6.1'
+end
 
 # fetch the aws item from the credentials vault
 aws = chef_vault_item(:credentials, 'aws')
