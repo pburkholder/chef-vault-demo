@@ -199,11 +199,17 @@ chef-client -z cookbooks/vault-provision/recipes/ws_autoscaling.rb
 ```
 
 ```
-function vault-demo-ip() {
-  aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names vault-provision | jq -r '.AutoScalingGroups[].Instances[].InstanceId' | sort | while read instance_id; do
-    aws ec2 describe-instances --instance-ids $instance_id | jq -r '.Reservations[].Instances[].PublicIpAddress' | sort
-  done
+function vault-demo-ids() {
+ aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names vault-provision | jq -r '[.AutoScalingGroups[].Instances[].InstanceId] | join(" ")'
 }
+
+
+function vault-demo-ips() {
+  instance_ids=$(vault-demo-ids)
+  aws ec2 describe-instances --instance-ids $instance_ids | jq -r '.Reservations[].Instances[].PublicIpAddress'
+}
+
+NODE_ARRAY=( $(vault-demo-ips) )
 ```
 
 ## 4.2 First test
@@ -212,3 +218,13 @@ function vault-demo-ip() {
 - Update the vault
 - Converge the node to the run_list
 - Verify
+
+```
+knife bootstrap ${NODE_ARRAY[0]} \
+  -N whitewalker_node_0 \
+  --hint ec2 \
+  -r ''    \
+  --sudo     -x ubuntu
+
+knife node list
+```
