@@ -250,3 +250,12 @@ inspec_exec -t ssh://ubuntu@${ARRAY[0]}
 ```
 
 ## 4.2 Bootstrap with --vault-bootstrap
+
+## 4.3 How to update a vault item
+
+## 4.4 Some weaknesses
+
+- autoscaling
+- node impersonation attack
+- data-bag write-lock issues
+- vault-admins not the same set of folks as the chef-admins
