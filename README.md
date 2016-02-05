@@ -228,3 +228,25 @@ knife bootstrap ${NODE_ARRAY[0]} \
 
 knife node list
 ```
+
+Review the vault and Update
+
+```
+knife data bag show credentials aws_keys
+knife vault refresh credentials aws -M client
+knife data bag show credentials aws_keys
+```
+
+Converge node to a run_list
+
+```
+knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
+```
+
+Verify
+```
+alias inspec_exec='inspec exec cookbooks/vault-demo/test/integration/default/serverspec/default_spec.rb --key-files  ~/.ssh/pburkholder-one'
+inspec_exec -t ssh://ubuntu@${ARRAY[0]}
+```
+
+## 4.2 Bootstrap with --vault-bootstrap

@@ -1,4 +1,4 @@
-name 'chef-vault-demo-cookbook'
+name 'vault-demo'
 maintainer 'The Authors'
 maintainer_email 'you@example.com'
 license 'all_rights'
