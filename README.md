@@ -213,7 +213,7 @@ chef_gem 'chef-vault' do
 end
 
 # fetch the aws item from the credentials vault
-aws = chef_vault_item(:credentials, 'aws')
+aws = chef_vault_item('credentials', 'aws')
 aws_secret_key = aws['aws_secret_key']
 aws_access_key = aws['aws_access_key']
 ```
