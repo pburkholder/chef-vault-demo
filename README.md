@@ -196,6 +196,8 @@ knife data bag show credentials aws_keys
 
 ## 3.2: Let's use vault in our code
 
+Use: `rake v3` to link to correct code
+
 *Screencast https://s3-us-west-2.amazonaws.com/chef-vault-demo/ChefVault3.2UseInRecipe.mp4*
 
 To the cookbook's `metadata.rb` add `depends 'chef-vault'` and to default recipe, we'll now have:
@@ -216,7 +218,7 @@ aws_secret_key = aws['aws_secret_key']
 aws_access_key = aws['aws_access_key']
 ```
 
-*** Upload to server ***
+**Upload to server**
 
 ```
 berks install
