@@ -105,7 +105,6 @@ for user in starly jsnow jslynt; do
   chef-server-ctl user-delete $user
 done
 
-
 aws autoscaling set-desired-capacity \
   --auto-scaling-group-name vault-provision \
   --desired-capacity 3
@@ -201,7 +200,7 @@ knife data bag show credentials aws
 knife data bag show credentials aws_keys
 ```
 
-## 4.1: Let's use vault in our code and set up our test instances
+## 4.1: Let's use vault in our code
 
 To the cookbook's `metadata.rb` add `depends 'chef-vault'` and to default recipe, we'll now have:
 
@@ -215,6 +214,7 @@ end
 require 'chef-vault'
 
 # fetch the aws item from the credentials vault
+# was: aws = data_bag_item('encrypted', 'aws', '/etc/chef/secret-file')
 aws = chef_vault_item('credentials', 'aws')
 aws_secret_key = aws['aws_secret_key']
 aws_access_key = aws['aws_access_key']
@@ -227,7 +227,7 @@ berks install
 berks upload
 ```
 
-### 4.1.1: An aside on AWS provisioning
+### 4.1.1: Set up our test instances (an aside on AWS provisioning)
 
 To use this we need some nodes. The cookbook `vault-provision` creates an AWS autoscale group with TKTK nodes, and pre-installs `chef-client` on them. I use the cookbook to stand up the nodes like this:
 
@@ -265,50 +265,48 @@ Here are the steps we'll run through:
 - Verify
 
 
-#### 1. Bootstrap to no run_list:
+#### 1. Bootstrap to run_list vault-demo:
 
 ```
-knife bootstrap ${VAULT_IPS[0]} \
-  -N whitewalker_node_0 \
+# confirm we have nodes with ips:
+vault-demo-ids; vault-demo-ips
+
+NODE=0
+knife bootstrap ${VAULT_IPS[$NODE]} \
+  -N whitewalker_node_$NODE \
   --hint ec2 \
-  -r ''    \
-  --sudo     -x ubuntu
+  -r 'recipe[vault-demo]' \
+  --sudo -x ubuntu
 
+# Oops ^^ this fails
+
+```
+
+#### 2. Why did it fail? How to fix it...
+
+```
 knife node list
-```
-
-#### 2. Set the run_list and run chef-client:
-
-```
-knife node run_list set whitewalker_node_0 'recipe[vault-demo]'
-knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
-```
-
-#### 3. Review the vault then update it
-
-```
 knife data bag show credentials aws_keys
 knife vault refresh credentials aws -M client
+knife data bag show credentials aws_keys
 ```
 
-#### 4. Attempt again to converge node to a run_list
+#### 3. Attempt again to converge node to a run_list
 
 ```
 knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
 ```
 
-#### 5. Verify
+#### 4. Verify
 
 ```
-alias inspec_exec='inspec exec cookbooks/vault-demo/test/integration/default/serverspec/default_spec.rb --key-files  ~/.ssh/pburkholder-one'
-inspec_exec -t ssh://ubuntu@${VAULT_IPS[0]}
+SPEC=$HOME/Projects/pburkholder/chef-vault-demo/cookbooks/vault-demo/test/integration/default/serverspec/default_spec.rb
+inspec exec $SPEC --key-files  ~/.ssh/pburkholder-one -t ssh://ubuntu@${VAULT_IPS[$NODE]}
 ```
 
 ## 4.3 Bootstrap with --vault-bootstrap
 
-For our second node, VAULT_IPS[1], we'll combine some steps into our initial bootstrap:
-- set to real run_list
-- use the `--vault-bootstrap` option
+For our second node, VAULT_IPS[1], we'll use the `--vault-bootstrap` option so
 
 ```
 NODE=1
@@ -317,7 +315,7 @@ knife bootstrap ${VAULT_IPS[$NODE]} \
   --hint ec2 \
   -r 'recipe[vault-demo]'    \
   --bootstrap-vault-item 'credentials:aws' \
-  --sudo     -x ubuntu
+  --sudo -x ubuntu
 ```
 
 Now view the vault and verify the result.:
