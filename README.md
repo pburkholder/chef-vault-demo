@@ -104,7 +104,7 @@ aws autoscaling set-desired-capacity \
 ## 3: Vault
 
 
-Using vault with test-kitchen and chef-zero/local-mode is non-obvious, so we'll go to using real user and nodes.  From the branch on the code is set up as a chef-repo instead of just a single cookbook.
+Using vault with test-kitchen and chef-zero/local-mode requires some amount of setup of `test fixtures`, as demonstrated in the `chef-vault` cookboook. However, since looking at the client-server interaction is important to understanding Chef Vault, we'll use a real Chef Server for the rest of this walk-through.
 
 ### 3.0: Set up the chef-server users and orgs
 
@@ -196,7 +196,12 @@ knife data bag show credentials aws_keys
 
 ## 3.2: Let's use vault in our code
 
-Use: `rake v3` to link to correct code
+Use: `rake v3` to link to correct code, and populate the array of nodes:
+
+```
+export VAULT_IPS=( $(vault-demo-ips) )
+export VAULT_ID=( $(vault-demo-ids) )
+```
 
 *Screencast https://s3-us-west-2.amazonaws.com/chef-vault-demo/ChefVault3.2UseInRecipe.mp4*
 
@@ -293,7 +298,7 @@ Now view the vault and verify the result.:
 
 ```
 knife data bag show credentials aws_keys
-inspec_exec -t ssh://ubuntu@${VAULT_IPS[$NODE]}
+inspec exec $SPEC --key-files  ~/.ssh/pburkholder-one -t ssh://ubuntu@${VAULT_IPS[$NODE]}
 ```
 
 
@@ -302,6 +307,25 @@ inspec_exec -t ssh://ubuntu@${VAULT_IPS[$NODE]}
 ### 4.1 How to work with vault over time
 
 #### 4.1.1 Updating vault items
+
+Use: `rake v4` to link to correct code
+
+Let's add some new secret fields to our template -- per the code in
+
+- cookbooks/vault-demo/templates/default/s3cfg.erb
+- cookbooks/vault-demo/recipes/default.rb
+
+We can upload that cookbook and run the chef-client on our nodes and test the results:
+
+```
+(cd cookbooks/vault-demo/ && berks install && berks upload)
+knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
+NODE=0
+inspec exec $SPEC --key-files ~/.ssh/pburkholder-one -t ssh://ubuntu@${VAULT_IPS[$NODE]}
+```
+
+and test
+
 
 
 
