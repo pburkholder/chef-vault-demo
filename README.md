@@ -27,22 +27,7 @@ Show Policy
 ```
 - this cookbook runs a lot faster using `inspec` and `kitchen-dokken`. The command `rake dokken` symlinks `_kitchen.local.yml` to `.kitchen.local.yml` so you can use. As of 1 Feb 2016, this required local installation of the gem from https://github.com/chef/kitchen-inspec so you can use Inspec against docker.
 
-## 0: Doing it all in cleartext
-
-See video to see the details
-
-- git clone this repo
-- update the inspec tests
-- update the recipe
-- test-kitchen
-
-## 1: Use a template and variables
-
-1. Move content to `templates/default/s3cfg.erb`
-2. Use variables `aws_access_key` and `aws_secret_key`
-3. Set variables and use them in them template
-
-## 2: Use a data bag
+## 1: Use a data bag
 
 ```
 git checkout v2-initial-databag
@@ -69,7 +54,12 @@ and we've now created a databag, as JSON, at data_bags/cleartext/aws.json, with 
 ```
 
 
-## 3: Encrypted data bags
+```
+knife data bag -z create cleartext
+knife data bag -z from file cleartext data_bags/cleartext/aws.json
+```
+
+## 2: Encrypted data bags
 
 ```
 git checkout v3-encrypted-databag
@@ -92,7 +82,7 @@ knife data bag -z from file encrypted data_bags/cleartext/aws.json --secret-file
 
 and we'll update our recipe....
 
-## 3.99 Refresh everything for vault demo
+### 2.99 Refresh everything for vault demo (for demonstrators)
 
 ```
 
@@ -111,11 +101,14 @@ aws autoscaling set-desired-capacity \
 
 ```
 
-## 4.0: Setting up to use vault
-**
+## 3: Vault
+
+
 Using vault with test-kitchen and chef-zero/local-mode is non-obvious, so we'll go to using real user and nodes.  From the branch on the code is set up as a chef-repo instead of just a single cookbook.
 
-### 4.0.0: Set up the chef-server users and orgs
+### 3.0: Set up the chef-server users and orgs
+
+*Screencast: https://s3-us-west-2.amazonaws.com/chef-vault-demo/ChefVault3.0SettingUpChefServer.mp4*
 
 On a chef-server, we'll need to:
 - create an `organization`, "nightwatch"
@@ -162,8 +155,9 @@ Now I can test that we're all connected:
 knife user list
 ```
 
-### 4.0.1: Create the vault
+### 3.1: Create the vault
 
+*Screencast https://s3-us-west-2.amazonaws.com/chef-vault-demo/ChefVault3.1CreateVault.mp4*
 
 Let's create a vault to store our credentials:
 
@@ -200,7 +194,9 @@ knife data bag show credentials aws
 knife data bag show credentials aws_keys
 ```
 
-## 4.1: Let's use vault in our code
+## 3.2: Let's use vault in our code
+
+*Screencast https://s3-us-west-2.amazonaws.com/chef-vault-demo/ChefVault3.2UseInRecipe.mp4*
 
 To the cookbook's `metadata.rb` add `depends 'chef-vault'` and to default recipe, we'll now have:
 
@@ -227,7 +223,108 @@ berks install
 berks upload
 ```
 
-### 4.1.1: Set up our test instances (an aside on AWS provisioning)
+## 3.3 Demonstrate on a node that is already a chef node
+
+Here are the steps we'll run through:
+
+- Bootstrap a node with no run_list
+- Try a run_list on that node before we've updated vault
+- Update the vault
+- Converge the node to the run_list
+- Verify
+
+
+#### 3.3.1. Bootstrap to run_list vault-demo:
+
+```
+# confirm we have nodes with ips:
+vault-demo-ids; vault-demo-ips
+
+NODE=0
+knife bootstrap ${VAULT_IPS[$NODE]} \
+  -N whitewalker_node_$NODE \
+  --hint ec2 \
+  -r 'recipe[vault-demo]' \
+  --sudo -x ubuntu
+
+# Oops ^^ this fails
+
+```
+
+#### 3.3.2. Why did it fail? How to fix it...
+
+```
+knife node list
+knife data bag show credentials aws_keys
+knife vault refresh credentials aws -M client
+knife data bag show credentials aws_keys
+```
+
+#### 3.3.3. Attempt again to converge node to a run_list
+
+```
+knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
+```
+
+#### 3.3.4. Verify
+
+```
+SPEC=$HOME/Projects/pburkholder/chef-vault-demo/cookbooks/vault-demo/test/integration/default/serverspec/default_spec.rb
+inspec exec $SPEC --key-files  ~/.ssh/pburkholder-one -t ssh://ubuntu@${VAULT_IPS[$NODE]}
+```
+
+## 3.4 Demonstrate node bootstrap with --vault-bootstrap
+
+For our second node, VAULT_IPS[1], we'll use the `--vault-bootstrap` option so
+
+```
+NODE=1
+knife bootstrap ${VAULT_IPS[$NODE]} \
+  -N whitewalker_node_${NODE} \
+  --hint ec2 \
+  -r 'recipe[vault-demo]'    \
+  --bootstrap-vault-item 'credentials:aws' \
+  --sudo -x ubuntu
+```
+
+Now view the vault and verify the result.:
+
+```
+knife data bag show credentials aws_keys
+inspec_exec -t ssh://ubuntu@${VAULT_IPS[$NODE]}
+```
+
+
+## 4 Working with Vault
+
+### 4.1 How to work with vault over time
+
+- vault and version control
+- updating vault items
+- updating vault admins/clients
+
+### 4.2 Some weaknesses to watch for
+
+- autoscaling
+- node impersonation attack
+- data-bag write-lock issues
+- large client pools
+- vault-admins not the same set of folks as the chef-admins
+
+## Notes on presenting
+
+Order:
+1. Present: Using DBs and EDBs
+  1. Part 2 with databags
+  2. Part 3 with EDBs
+1. skip: Setting up server
+1. Screencast: 4.0.1CreateVault
+2. Present: 4.1 Using in Recipe
+1. Present: 4.2 First test starting with no run_list node
+1. Present: 4.3 Using knife bootstrap
+
+
+### 99: Set up our test instances (an aside on AWS provisioning)
 
 To use this we need some nodes. The cookbook `vault-provision` creates an AWS autoscale group with TKTK nodes, and pre-installs `chef-client` on them. I use the cookbook to stand up the nodes like this:
 
@@ -253,101 +350,3 @@ alias terminate-vault-id='aws autoscaling terminate-instance-in-auto-scaling-gro
 VAULT_IPS=( $(vault-demo-ips) )
 VAULT_IDS=( $(vault-demo-ids) )
 ```
-
-## 4.2 First test
-
-Here are the steps we'll run through:
-
-- Bootstrap a node with no run_list
-- Try a run_list on that node before we've updated vault
-- Update the vault
-- Converge the node to the run_list
-- Verify
-
-
-#### 1. Bootstrap to run_list vault-demo:
-
-```
-# confirm we have nodes with ips:
-vault-demo-ids; vault-demo-ips
-
-NODE=0
-knife bootstrap ${VAULT_IPS[$NODE]} \
-  -N whitewalker_node_$NODE \
-  --hint ec2 \
-  -r 'recipe[vault-demo]' \
-  --sudo -x ubuntu
-
-# Oops ^^ this fails
-
-```
-
-#### 2. Why did it fail? How to fix it...
-
-```
-knife node list
-knife data bag show credentials aws_keys
-knife vault refresh credentials aws -M client
-knife data bag show credentials aws_keys
-```
-
-#### 3. Attempt again to converge node to a run_list
-
-```
-knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
-```
-
-#### 4. Verify
-
-```
-SPEC=$HOME/Projects/pburkholder/chef-vault-demo/cookbooks/vault-demo/test/integration/default/serverspec/default_spec.rb
-inspec exec $SPEC --key-files  ~/.ssh/pburkholder-one -t ssh://ubuntu@${VAULT_IPS[$NODE]}
-```
-
-## 4.3 Bootstrap with --vault-bootstrap
-
-For our second node, VAULT_IPS[1], we'll use the `--vault-bootstrap` option so
-
-```
-NODE=1
-knife bootstrap ${VAULT_IPS[$NODE]} \
-  -N whitewalker_node_${NODE} \
-  --hint ec2 \
-  -r 'recipe[vault-demo]'    \
-  --bootstrap-vault-item 'credentials:aws' \
-  --sudo -x ubuntu
-```
-
-Now view the vault and verify the result.:
-
-```
-knife data bag show credentials aws_keys
-inspec_exec -t ssh://ubuntu@${VAULT_IPS[$NODE]}
-```
-
-
-## 5 How to work with vault over time
-
-- vault and version control
-- updating vault items
-- updating vault admins/clients
-
-## 5.1 Some weaknesses
-
-- autoscaling
-- node impersonation attack
-- data-bag write-lock issues
-- large client pools
-- vault-admins not the same set of folks as the chef-admins
-
-## Notes on presenting
-
-Order:
-1. Present: Using DBs and EDBs
-  1. Part 2 with databags
-  2. Part 3 with EDBs
-1. skip: Setting up server
-1. Screencast: 4.0.1CreateVault
-2. Present: 4.1 Using in Recipe
-1. Present: 4.2 First test starting with no run_list node
-1. Present: 4.3 Using knife bootstrap
