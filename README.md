@@ -36,4 +36,12 @@ See video to see the details
 - update the inspec tests
 - update the recipe
 - test-kitchen
-- git commit 
+- git commit
+
+
+## test-kitchen
+
+```
+bundle install
+KITCHEN_LOCAL_YAML=.kitchen.dokken.yml bundle exec kitchen list
+```
