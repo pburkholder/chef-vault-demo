@@ -299,8 +299,16 @@ inspec_exec -t ssh://ubuntu@${VAULT_IPS[$NODE]}
 
 ### 4.1 How to work with vault over time
 
-- vault and version control
-- updating vault items
+#### 4.1.1 Updating vault items
+
+
+
+Let's update our vault with a new set of AWS credentials.
+
+#### 4.1.2Vault and version control**
+
+
+
 - updating vault admins/clients
 
 ### 4.2 Some weaknesses to watch for

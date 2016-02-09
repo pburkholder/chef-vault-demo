@@ -18,3 +18,4 @@ bin/*
 .chef/
 
 nodes/
+cookbooks/vault-demo
