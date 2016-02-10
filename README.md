@@ -1,5 +1,16 @@
 # chef-vault-demo-cookbook
 
+## Overview
+
+- The scenario of fetching from AWS
+- The test suites
+- Initial run with cleartext data bag
+- Run with encrypted_data bag
+- Vault creation
+- Using vault
+
+
+
 ## Some of the prerequisites (for demonstrators/contributors only)
 
 - I've created an s3 bucket, `s3://chef-vault-demo` that has two objects,
@@ -29,11 +40,11 @@ Show Policy
 
 ## 1: Use a data bag
 
-```
-git checkout v2-initial-databag
-git diff origin/v1 -- recipes
-git diff origin/v1 -- data_bags
-```
+Let's look at how we use a Chef data bag with a template in a recipe:
+
+- view `v0.1.0/recipes/templates/default/s3cfg.rb`
+- view `v0.1.0/recipes/default.rb`
+
 
 In the recipe we've replaced the variable assignments with a fetch from a data bag:
 
@@ -43,7 +54,7 @@ aws_secret_key = aws['aws_secret_key']
 aws_access_key = aws['aws_access_key']
 ```
 
-and we've now created a databag, as JSON, at data_bags/cleartext/aws.json, with contents:
+and we've now created a JSON representation of our data, at data_bags/cleartext/aws.json, with contents:
 
 ```
 {
@@ -53,16 +64,27 @@ and we've now created a databag, as JSON, at data_bags/cleartext/aws.json, with 
 }
 ```
 
+When running against a server we would do the following without the `-z`
 
 ```
 knife data bag -z create cleartext
-knife data bag -z from file cleartext data_bags/cleartext/aws.json
+knife data bag -z from file cleartext aws.json
 ```
+
+Now test with test kitchen  
+
+```
+rake dokken
+kitchen converge
+kitchen verify
+```
+
+
 
 ## 2: Encrypted data bags
 
 ```
-git checkout v3-encrypted-databag
+cd cookbooks/vault-demo-v0.2.0
 ```
 
 Make the secret from random data
@@ -81,6 +103,8 @@ knife data bag -z from file encrypted data_bags/cleartext/aws.json --secret-file
 ```
 
 and we'll update our recipe....
+
+
 
 ### 2.99 Refresh everything for vault demo (for demonstrators)
 
