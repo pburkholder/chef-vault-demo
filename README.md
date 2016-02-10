@@ -315,6 +315,8 @@ Let's add some new secret fields to our template -- per the code in
 - cookbooks/vault-demo/templates/default/s3cfg.erb
 - cookbooks/vault-demo/recipes/default.rb
 
+we will add a `aws_comment` to the .s3cfg file.
+
 We can upload that cookbook and run the chef-client on our nodes and test the results:
 
 ```
@@ -324,18 +326,36 @@ NODE=0
 inspec exec $SPEC --key-files ~/.ssh/pburkholder-one -t ssh://ubuntu@${VAULT_IPS[$NODE]}
 ```
 
-and test
+So we get the failures we expect. To fix that, we need to update our vault.
 
+```
+knife vault edit credentials aws -M client
+```
+
+Now we can run that converge and test again (note no update to cookbook needed)
+
+```
+knife ssh 'name:white*' -x ubuntu 'sudo chef-client'
+NODE=0
+inspec exec $SPEC --key-files ~/.ssh/pburkholder-one -t ssh://ubuntu@${VAULT_IPS[$NODE]}
+```
+
+Other management tasks are covered in the documentation such as:
+- adding nodes
+- removing nodes
+- updating admin keys
+- adding admins
+- removing admins
+- deleting a vault item
+- deleting an entire vault (which is a delete command to `data bag`)
 
 
 
 Let's update our vault with a new set of AWS credentials.
 
-#### 4.1.2Vault and version control**
+#### 4.1.2 Vault and version control
 
 
-
-- updating vault admins/clients
 
 ### 4.2 Some weaknesses to watch for
 
