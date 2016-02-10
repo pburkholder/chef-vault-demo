@@ -1,0 +1,21 @@
+---
+driver:
+  name: dokken
+  chef_version: 12.5.1
+
+transport:
+  name: dokken
+
+provisioner:
+  name: dokken
+
+verifier:
+  name: busser
+  root_path: '/opt/verifier'
+  sudo: false
+
+platforms:
+- name: ubuntu-14.04
+  driver:
+    image: ubuntu-upstart:14.04
+    pid_one_command: /sbin/init

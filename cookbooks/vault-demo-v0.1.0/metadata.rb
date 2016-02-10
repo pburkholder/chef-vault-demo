@@ -1,0 +1,7 @@
+name 'chef-vault-demo-cookbook'
+maintainer 'Peter Burkholder'
+maintainer_email 'pburkholder+chef@pobox.com'
+license 'Apache 2'
+description 'Installs/Configures chef-vault-demo-cookbook'
+long_description 'Demonstrate databag approach'
+version '0.1.0'

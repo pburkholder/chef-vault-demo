@@ -349,12 +349,64 @@ Other management tasks are covered in the documentation such as:
 - deleting a vault item
 - deleting an entire vault (which is a delete command to `data bag`)
 
+#### 4.1.2 Vault and version control considerations
 
+Your vault credentials are recoverable from backup if you make sure to store the entire data bag AND have access to at least one of the admin private keys. To track in a VCS you'd need to have a representation that is safe to store, and can be recovered to that point in time. How might that work?
 
-Let's update our vault with a new set of AWS credentials.
+The following gives us the clear-text representation of the vault item credentials:aws:
 
-#### 4.1.2 Vault and version control
+```
+> knife vault show credentials aws -M client -F json
+{
+  "id": "aws",
+  "aws_access_key": "AKIAJWLDGDWB6HVRMRAQ",
+  "aws_secret_key": "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"
+}
+```
 
+Clearly we can't commit the clear-test to version control. How about the encrypted data bag representation?
+
+```
+> knife data bag show credentials aws -F json
+WARNING: Encrypted data bag detected, but no secret provided for decoding.  Displaying encrypted data.
+{
+  "id": "aws",
+  "aws_access_key": {
+    "encrypted_data": "nHwnGE8bMm/6ECg6IXsBskv1SdW/PoptPKugToy+LGVgfMVvX3T4jSXp/Axk\nOZMv\n",
+    "iv": "OpUENg6SgR68A7M4QwCACQ==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  },
+  "aws_secret_key": {
+    "encrypted_data": "BJOhvFid4TXX0I9075rBbS5XetTFZAc3O0JMWDSB8MOpwsN6UPrpTtHSQcSF\n79h9SimKiDqRyIgMWJFOWkzPUQ==\n",
+    "iv": "xPtZIrNvrBFjQ4AcJzeIgQ==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  }
+}
+```
+
+That's OK to commit to version control, but is it of any use?
+- If you want to simply track when credentials changed, yes
+- If you want to recover those credentials later, no
+
+The encrypted credentials are recoverable only if you have the symmetric key. To get the symmetric key, you need two things:
+
+- The contents of `aws_keys`
+- The private key of one of the admins from the time when vault was last refreshed.
+
+**or**
+- you can get the admin's encrypted copy of the symmetric key:
+
+```
+> knife data bag show credentials aws_keys -F json | jq '.pdb'
+"WkGmb+I6WgE9lBdphbmroIPS73JQ52d4Dlt77WWHGIhpNdOpTjbyy59Lvzwj\n7plgzsKkGReXcrq1+wTm1jSQbjKyo5/Q2GuYCXgEKMJsYu4u7Qfvo901aq9l\nOD/ljmVGRfK945fOuSEmHB5u1Hy1Ql1KdE6jQEnIPLTEuZxJ+9ozEtL6sjkY\n7Oh/2AlvhMW2xyEoVnssT9NZFAVlyBxlspXbqZS+D8BUT9l5DRs6ZOsnCgGM\nlvlzdC/jOzDnuczMXATGKSfL41Smfn32UBmaA8tIvmNkoN+DYd/3i4W3MaTT\nR/21Rs1wkMy88GJt7HiMopSa8T2UgVosBMAYIJwA1g==\n"
+```
+
+- then decrypt that key with the admins private key
+- and store the symmetric key someplace safe (outside of version control)
+
+In short, there's nothing in the standard Chef workflow that works for version control of a Chef Vault, but there are workflows that use other PKI elements that work. See, for example, [http://padgeblog.com/2015/03/24/chef-vault-with-large-teams/](Chef Vault with Large Teams) by JP Padgett.
 
 
 ### 4.2 Some weaknesses to watch for
