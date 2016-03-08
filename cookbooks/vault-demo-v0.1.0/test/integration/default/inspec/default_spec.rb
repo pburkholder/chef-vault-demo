@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'inspec'
 
 # s3cmd package installed
 describe package('s3cmd') do

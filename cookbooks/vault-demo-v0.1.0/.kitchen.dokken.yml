@@ -8,6 +8,7 @@ transport:
 
 provisioner:
   name: dokken
+  data_bags_path: ../../data_bags
 
 verifier:
   name: busser

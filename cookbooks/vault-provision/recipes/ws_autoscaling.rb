@@ -17,7 +17,8 @@ with_driver 'aws::us-east-1' do
   end
 
   aws_launch_configuration group_name do
-    image 'ami-ad3718c7'  # Trusty
+#    image 'ami-ad3718c7'  # Trusty
+      image_id 'ami-dc5e75b4'  # Trusty
     instance_type 't2.micro'
     options({
       security_groups: [ group_name ],

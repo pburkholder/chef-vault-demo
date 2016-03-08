@@ -1,62 +1,58 @@
 # chef-vault-demo-cookbook
 
-## Overview
+Welcome to the chef-vault-demo set of cookbooks.
 
-- The scenario of fetching from AWS
-- The test suites
-- Initial run with cleartext data bag
-- Run with encrypted_data bag
-- Vault creation
-- Using vault
+The purpose of this project is present you with TK iterations of a cookbook that takes a secret, in one form or another, and uses it with a Chef `template` resource. The iterations are:
 
+- vault-demo-1 : Use a clear-text data bag
+- vault-demo-2 : Use an encrypted data bag
+- vault-demo-3 : Use chef-vault with a pre-existing chef server and 3 nodes in AWS
+  - I have not made demo 3 self-service at this point
+- vault-demo-4 : Use chef-vault in a self-contained testing environment
 
+The purpose of every cookbook is :
+- create `/home/ubuntu/.s3cfg` with AWS access keys
+- create `/home/ubuntu/minikitten.png` using those keys
 
-## Some of the prerequisites (for demonstrators/contributors only)
+The first two examples are meant to build a bit of familiarity with data bags and encrypted data bags so the vault stuff makes more sense.
 
-- I've created an s3 bucket, `s3://chef-vault-demo` that has two objects,
-  - unikitten.png (1.7Mb)
-  - minikitten.png (417Kb)
-- I've created an AWS user, `chef-vault-demo` which has the following policy applied, so it can do nothing except GET those objects
+## Set up for testing and demonstration
+
+- Have ChefDK installed
+- Clone this repo, then `cd` to the top level
+- Examples 1 & 2 run a lot faster using `inspec` and `kitchen-dokken`. To use them w/ \*nix system, make sure you have `kitchen-inspec` version 0.12.1 or greater, and set: ```
+export KITCHEN_LOCAL_YAML=.kitchen.dokken.yml
 ```
-Show Policy
- {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "Stmt1454343707000",
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject"
-            ],
-            "Resource": [
-                "arn:aws:s3:::chef-vault-demo/unikitten.png",
-                "arn:aws:s3:::chef-vault-demo/minikitten.png"
-            ]
-        }
-    ]
-}
-```
-- this cookbook runs a lot faster using `inspec` and `kitchen-dokken`. The command `rake dokken` symlinks `_kitchen.local.yml` to `.kitchen.local.yml` so you can use. As of 1 Feb 2016, this required local installation of the gem from https://github.com/chef/kitchen-inspec so you can use Inspec against docker.
+  - Setting up Docker and kitchen-dokken is out of scope of this README
+
 
 ## 1: Use a data bag
 
+Set up to use v1 with:
+
+```
+rake v1
+pushd cookbooks/vault-demo
+```
+
 Let's look at how we use a Chef data bag with a template in a recipe:
 
-- view `v0.1.0/recipes/templates/default/s3cfg.rb`
-- view `v0.1.0/recipes/default.rb`
-
+```
+more templates/default/s3cfg.erb
+more recipes/default.rb
+```
 
 In the recipe we've replaced the variable assignments with a fetch from a data bag:
 
-```
+```ruby
 aws = data_bag_item('cleartext', 'aws')
 aws_secret_key = aws['aws_secret_key']
 aws_access_key = aws['aws_access_key']
 ```
 
-and we've now created a JSON representation of our data, at data_bags/cleartext/aws.json, with contents:
+and we have input JSON representation of our data, at `chef-vault-demo/inputs/aws.json` with contents:
 
-```
+```javascript
 {
   "id": "aws",
   "aws_access_key": "AKIAJWLDGDWB6HVRMRAQ",
@@ -64,21 +60,21 @@ and we've now created a JSON representation of our data, at data_bags/cleartext/
 }
 ```
 
-When running against a server we would do the following without the `-z`
+For our test we'll create the data bag inside our repo then use it with test-kitchen
 
-```
+```shell
 knife data bag -z create cleartext
-knife data bag -z from file cleartext aws.json
+knife data bag -z from file cleartext ../../inputs/aws.json
 ```
 
 Now test with test kitchen  
 
 ```
-rake dokken
 kitchen converge
 kitchen verify
 ```
 
+Review: What just happened here?
 
 
 ## 2: Encrypted data bags
@@ -479,4 +475,39 @@ alias terminate-vault-id='aws autoscaling terminate-instance-in-auto-scaling-gro
 
 VAULT_IPS=( $(vault-demo-ips) )
 VAULT_IDS=( $(vault-demo-ids) )
+```
+
+## Set and Overview (Optional)
+
+- The scenario of fetching from AWS
+- The test suites
+- Initial run with cleartext data bag
+- Run with encrypted_data bag
+- Vault creation
+- Using vault
+
+## Some of the prerequisites (for demonstrators/contributors only)
+
+- I've created an s3 bucket, `s3://chef-vault-demo` that has two objects,
+  - unikitten.png (1.7Mb)
+  - minikitten.png (417Kb)
+- I've created an AWS user, `chef-vault-demo` which has the following policy applied, so it can do nothing except GET those objects
+```
+Show Policy
+ {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1454343707000",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::chef-vault-demo/unikitten.png",
+                "arn:aws:s3:::chef-vault-demo/minikitten.png"
+            ]
+        }
+    ]
+}
 ```
