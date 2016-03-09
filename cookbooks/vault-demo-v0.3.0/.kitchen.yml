@@ -3,20 +3,18 @@ driver:
   name: vagrant
 
 provisioner:
-  name: chef_zero
+  name: shell
 
-# Uncomment the following verifier to leverage Inspec instead of Busser (the
-# default verifier)
 verifier:
   name: inspec
 
 platforms:
   - name: ubuntu-14.04
-#  - name: centos-7.1
 
 suites:
-  - name: default
-    data_bags_path: "data_bags"
-    run_list:
-      - recipe[vault-demo::default]
-    attributes:
+  - name: fresh
+    provisioner:
+      script: fresh.sh
+  - name: autoscale
+    provisioner:
+      script: autoscale.sh
