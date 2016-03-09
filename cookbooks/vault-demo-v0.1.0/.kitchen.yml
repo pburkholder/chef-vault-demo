@@ -5,9 +5,7 @@ driver:
 provisioner:
   name: chef_zero
   data_bags_path: ../../data_bags
-
-# Uncomment the following verifier to leverage Inspec instead of Busser (the
-# default verifier)
+  
 verifier:
   name: inspec
   sudo: true

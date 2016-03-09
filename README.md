@@ -38,9 +38,8 @@ pushd cookbooks/vault-demo
 Let's look at how we use a Chef data bag with a template in a recipe:
 
 ```
-more templates/default/s3cfg.erb
+more templates/default/s3cfg.rb
 more recipes/default.rb
-```
 
 In the recipe we've replaced the variable assignments with a fetch from a data bag:
 
@@ -105,26 +104,16 @@ and we'll update our recipe....
 ### 2.99 Refresh everything for vault demo (for demonstrators)
 
 ```
-
-aws autoscaling set-desired-capacity \
-  --auto-scaling-group-name vault-provision \
-  --desired-capacity 0
-
 chef-server-ctl org-delete nightwatch
 for user in starly jsnow jslynt; do
   chef-server-ctl user-delete $user
 done
-
-aws autoscaling set-desired-capacity \
-  --auto-scaling-group-name vault-provision \
-  --desired-capacity 3
-
 ```
 
-## 3: Vault
+## 3: Chef Vault
 
 
-Using vault with test-kitchen and chef-zero/local-mode requires some amount of setup of `test fixtures`, as demonstrated in the `chef-vault` cookboook. However, since looking at the client-server interaction is important to understanding Chef Vault, we'll use a real Chef Server for the rest of this walk-through.
+Using vault with test-kitchen and chef-zero/local-mode requires some amount of setup of `test fixtures`, as demonstrated in the `chef-vault` cookbook. However, since looking at the client-server interaction is important to understanding Chef Vault, we'll use a real Chef Server for the rest of this walk-through.
 
 ### 3.0: Set up the chef-server users and orgs
 
@@ -154,12 +143,12 @@ chef-server-ctl org-user-add nightwatch starly
 chef-server-ctl org-user-add nightwatch jslynt
 ```
 
-Let's make sure to fetch all these `.pem` files:
+Let's make sure to fetch all the _validator.pem_ key for the nightwatch org
 
 ```
 mychefserver="ubuntu@chefserver.cheffian.com"
-for pem in nightwatch jsnow starly jslynt; do
-  scp $mychefserver:$pem.pem $HOME/.chef/cheffian/
+for pem in nightwatch; do
+  scp $mychefserver:$pem.pem .
 done
 ```
 
@@ -218,10 +207,6 @@ knife data bag show credentials aws_keys
 
 Use: `rake v3` to link to correct code, and populate the array of nodes:
 
-```
-export VAULT_IPS=( $(vault-demo-ips) )
-export VAULT_ID=( $(vault-demo-ids) )
-```
 
 *Screencast https://s3-us-west-2.amazonaws.com/chef-vault-demo/ChefVault3.2UseInRecipe.mp4*
 
@@ -250,7 +235,32 @@ berks install
 berks upload
 ```
 
-## 3.3 Demonstrate on a node that is already a chef node
+## 3.3 Demonstrate with server
+
+We'll use TK test-kitchen Vagrant instances for this demonstration, to cover the following scenarios
+* An instance, 'fresh', which is allocated and running, but has yet to be provisioned with Chef or joined to a Chef Server
+  * For this instance, we'll use the `--vault-bootstrap` option to successfully converge
+* An instance, 'autoscale', which uses the validation.pem to join the Chef Server org and attempts to
+  * For this instance, we'll need to refresh the vault before a second converge can succeed
+
+### 3.3.1 fresh
+
+```
+kitchen converge fresh
+freshport=$(perl -ne 'm/port: .(\d+)/ && print $1' .kitchen/fresh-ubuntu-1404.yml)
+
+knife bootstrap 127.0.0.1 --ssh-port $freshport \
+  -N whitewalker_node_0 \
+  -r 'recipe[vault-demo]' \
+  --bootstrap-vault-item 'credentials:aws' \
+  --sudo -x vagrant -P vagrant
+
+kitchen verify fresh
+```
+
+
+
+
 
 Here are the steps we'll run through:
 
