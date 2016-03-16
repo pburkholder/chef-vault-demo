@@ -105,6 +105,8 @@ and we'll update our recipe....
 
 ```
 chef-server-ctl org-delete nightwatch
+
+## Optional if we want to demonstration user creation:
 for user in starly jsnow jslynt; do
   chef-server-ctl user-delete $user
 done
@@ -128,8 +130,7 @@ On a chef-server, we'll need to:
 To wit:
 
 ```
-myuser=pdb
-chef-server-ctl org-create nightwatch Nightwatch -f nightwatch.pem -a $myuser
+# If we need to (re-)create users:
 
 chef-server-ctl user-create jsnow Jon Snow \
   jsnow@castleblack.we winteriscoming -f jsnow.pem
@@ -138,12 +139,17 @@ chef-server-ctl user-create starly Sam Tarly \
 chef-server-ctl user-create jslynt Janos Slynt \
   jslynt@castleblack.we notmentioned -f jslynt.pem
 
+# Set the initial admin user: (pdb for me)
+myuser=pdb
+chef-server-ctl org-create nightwatch Nightwatch -f nightwatch.pem -a $myuser
+
+# Associate other users with the org:
 chef-server-ctl org-user-add nightwatch jsnow --admin
 chef-server-ctl org-user-add nightwatch starly
 chef-server-ctl org-user-add nightwatch jslynt
 ```
 
-Let's make sure to fetch all the _validator.pem_ key for the nightwatch org
+Let's make sure to fetch the _validator.pem_ key for the nightwatch org
 
 ```
 mychefserver="ubuntu@chefserver.cheffian.com"
@@ -258,8 +264,7 @@ knife bootstrap 127.0.0.1 --ssh-port $freshport \
 kitchen verify fresh
 ```
 
-
-
+############## START HERE AGAIN #############
 
 
 Here are the steps we'll run through:
@@ -446,6 +451,16 @@ In short, there's nothing in the standard Chef workflow that works for version c
 - data-bag write-lock issues
 - large client pools
 - vault-admins not the same set of folks as the chef-admins
+
+## 5 - Images:
+
+### 5.1 Encrypted Data Bag
+
+![Encrypted Data Bag](./inputs/edb.png)
+
+### 5.2 Vault and Encrypted Data Bags
+
+![Vault and Data Bags](./inputs/vault.png)
 
 ## Notes on presenting
 
