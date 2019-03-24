@@ -20,9 +20,10 @@ The first two examples are meant to build a bit of familiarity with data bags an
 
 - Have ChefDK installed
 - Clone this repo, then `cd` to the top level
-- Examples 1 & 2 run a lot faster using `inspec` and `kitchen-dokken`. To use them w/ \*nix system, make sure you have `kitchen-inspec` version 0.12.1 or greater, and set: ```
-export KITCHEN_LOCAL_YAML=.kitchen.dokken.yml
-```
+- Examples 1 & 2 run a lot faster using `inspec` and `kitchen-dokken`. To use them w/ \*nix system, make sure you have `kitchen-inspec` version 0.12.1 or greater, and set: 
+
+    export KITCHEN_LOCAL_YAML=.kitchen.dokken.yml
+
   - Setting up Docker and kitchen-dokken is out of scope of this README
 
 
@@ -30,24 +31,24 @@ export KITCHEN_LOCAL_YAML=.kitchen.dokken.yml
 
 Set up to use v1 with:
 
-```
-rake v1
-pushd cookbooks/vault-demo
-```
+
+    rake v1
+    pushd cookbooks/vault-demo
 
 Let's look at how we use a Chef data bag with a template in a recipe:
 
-```
-more templates/default/s3cfg.rb
-more recipes/default.rb
+
+    more templates/default/s3cfg.rb
+    more recipes/default.rb
 
 In the recipe we've replaced the variable assignments with a fetch from a data bag:
 
-```ruby
-aws = data_bag_item('cleartext', 'aws')
-aws_secret_key = aws['aws_secret_key']
-aws_access_key = aws['aws_access_key']
-```
+
+    ruby
+    aws = data_bag_item('cleartext', 'aws')
+    aws_secret_key = aws['aws_secret_key']
+    aws_access_key = aws['aws_access_key']
+
 
 and we have input JSON representation of our data, at `chef-vault-demo/inputs/aws.json` with contents:
 
@@ -68,10 +69,9 @@ knife data bag -z from file cleartext ../../inputs/aws.json
 
 Now test with test kitchen  
 
-```
-kitchen converge
-kitchen verify
-```
+    kitchen converge
+    kitchen verify
+
 
 Review: What just happened here?
 
